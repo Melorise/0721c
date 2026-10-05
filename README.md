@@ -26,7 +26,7 @@ npx 0721c init ./blog-comments
 4. 按需设置[邮件通知](docs/EMAIL_NOTIFICATIONS.md)，在文章收到评论或评论收到回复时发送提醒。
 
 本地工具要求 Node.js 22 或更新版本、Git。Vue 组件要求 Vue 3.5，Nuxt 模块支持 Nuxt 3.17 至 4.x。
-当前版本为 0.2.6，安装方式见初始化说明。
+当前版本为 0.3.0，安装方式见初始化说明。
 
 ## Nuxt Content 接入示例
 
@@ -78,13 +78,13 @@ messages: {
 
 ```text
 comments 分支
-article/essay/2026-09-28-hello/20261005T020000000Z-a1b2c3d4e5f6.json
+article/essay/2026-09-28-hello/comments-37.json
 
 index 分支
 article/essay/2026-09-28-hello.json
 ```
 
-评论 ID 由文章路径、UTC 时间戳和随机短串组成。网站读取 `index` 分支中当前文章的 JSON 文件。
+评论记录按文章路径分目录，文件名为 `comments-<Issue 编号>.json`。网站读取 `index` 分支中当前文章的 JSON 文件。
 
 ## 文档
 

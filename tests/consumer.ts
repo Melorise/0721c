@@ -39,4 +39,4 @@ client.getNewIssueUrl({ articleId: "post-001", article: { title: "文章标题",
 // Repository email configuration and comment links.
 import { buildCommentPermalink } from '0721c';
 validateSettings({ site: { url: 'https://blog.example', name: 'Blog' }, notifications: { enabled: true, from: 'comments@example.com', notifyOwner: true, notifyReplies: true } });
-buildCommentPermalink('https://blog.example/article', 'article/20261005T000000000Z-abcdef123456');
+buildCommentPermalink('https://blog.example/article', 'article/comments-37');

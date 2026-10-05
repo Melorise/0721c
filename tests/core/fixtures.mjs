@@ -1,11 +1,11 @@
 import { buildCommentTree } from '../../src/core/index.mjs';
-export function commentId(number, articleId = 'article/essay/2026-09-28-hello', createdAt = '2026-10-05T09:12:30Z') {
-  return `${articleId}/${new Date(createdAt).toISOString().replace(/[-:.]/g, '')}-${number.toString(16).padStart(12, '0')}`;
+export function commentId(number, articleId = 'article/essay/2026-09-28-hello') {
+  return `${articleId}/comments-${number}`;
 }
 export function record(number = 1, overrides = {}) {
   const blog_id = overrides.blog_id ?? 'article/essay/2026-09-28-hello';
   const created_at = overrides.created_at ?? '2026-10-05T09:12:30Z';
-  const item = { id: commentId(number, blog_id, created_at), blog_id, reply_to: null,
+  const item = { id: commentId(number, blog_id), blog_id, reply_to: null,
     author: { login: `user-${number}`, avatar_url: `https://avatars.githubusercontent.com/u/${number}` },
     created_at, body_markdown: `Comment ${number} 😀` };
   return { ...item, ...overrides, author: { ...item.author, ...overrides.author } };

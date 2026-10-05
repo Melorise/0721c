@@ -10,7 +10,7 @@ export async function validatePullRequest({ client, prNumber, mainCommit, contex
   const headSha = pr.head.sha;
   const branch = pr.head.ref;
   if (!/^comment-[1-9][0-9]*$/.test(branch)) throw new Error('Invalid Issue review branch');
-  inputNumber(branch.slice('comment-'.length), 'Issue number');
+  const issueNumber = inputNumber(branch.slice('comment-'.length), 'Issue number');
   await setStatus(client, headSha, 'pending', 'Validating comment data');
   try {
     const files = await list(client, `${client.basePath}/pulls/${prNumber}/files`);
@@ -21,6 +21,7 @@ export async function validatePullRequest({ client, prNumber, mainCommit, contex
     if (files[0].filename !== entry.path || files[0].sha !== entry.sha) throw new Error('PR file listing does not match its actual head');
     const record = validateCommentRecord(json(await readBlob(client, entry), entry.path));
     if (recordPath(record) !== entry.path) throw new Error('PR path does not match comment ID');
+    if (record.id !== `${record.blog_id}/comments-${issueNumber}`) throw new Error('Comment ID does not match the Issue review branch');
     if (!commentsEnabled(record.blog_id, context.settings, context.articles)) throw new Error('New comments are disabled for this article');
     const commentsSha = await requiredRef(client, 'heads/comments');
     const approved = await readRecords(client, commentsSha);

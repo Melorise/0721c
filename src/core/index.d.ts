@@ -80,7 +80,7 @@ export type CommentResult = CommentsResult;
 export function normalizeRepository(input: unknown): Repository;
 /** A safe relative URL path, e.g. article/essay/2026-09-28-hello. */
 export function assertArticleId(value: unknown): string;
-/** <articlePath>/<YYYYMMDDTHHmmssSSSZ>-<12 random hex characters>. */
+/** <articlePath>/comments-<GitHub Issue number>, e.g. article/hello/comments-37. */
 export function assertCommentId(value: unknown): string;
 export function validateSettings(value?: unknown): Settings;
 export function parseIssueBody(body: unknown, limits?: Partial<Limits>): ParsedIssueBody;

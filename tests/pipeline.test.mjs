@@ -6,7 +6,7 @@ const articleId='article/essay/2026-09-28-hello';
 function record(number=1,replyTo=null,body='第一条 **评论**') {
  const url=new URL(buildCommentIssueUrl({repository:'example/comments',articleId,replyTo,article:{title:'文章标题',url:'https://blog.example/'+articleId}}));
  const parsed=parseIssueBody(url.searchParams.get('body')+body);
- return {id:`${articleId}/20261005T020000000Z-${number.toString(16).padStart(12,'0')}`,blog_id:parsed.metadata.blog_id,reply_to:parsed.metadata.reply_to,
+ return {id:`${articleId}/comments-${number}`,blog_id:parsed.metadata.blog_id,reply_to:parsed.metadata.reply_to,
  author:{login:'example-user'},created_at:'2026-10-05T02:00:00Z',body_markdown:parsed.body_markdown,article:parsed.article};
 }
 function snapshot(records,settings=validateSettings()) {return buildIndexes({records,settings});}

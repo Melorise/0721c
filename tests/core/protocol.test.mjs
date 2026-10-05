@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { assertArticleId, assertCommentId, buildCommentIssueUrl, parseIssueBody, normalizeRepository, validateSettings } from '../../src/core/index.mjs';
 import { metadataLine, record } from './fixtures.mjs';
 const id='article/essay/2026-09-28-hello';
-test('comment ID combines readable article path, UTC timestamp and random suffix',()=>{
+test('comment ID combines readable article path and GitHub Issue number',()=>{
   assert.equal(assertArticleId(id),id); assert.equal(assertArticleId('文章/你好-世界'),'文章/你好-世界');
   assert.equal(assertCommentId(record().id),record().id);
   assert.equal(assertCommentId(record(2,{blog_id:'文章/你好-世界'}).id),record(2,{blog_id:'文章/你好-世界'}).id);
@@ -11,7 +11,7 @@ test('comment ID combines readable article path, UTC timestamp and random suffix
 for (const id of ['', '/article/a','article/a/','a//b','a/../b','a/./b','.git/config','a/..','a/\\b','a/%2f/b','a?b','a#b','https://example/a','a\n','a/'.repeat(257)]) {
   test(`unsafe article path rejected: ${JSON.stringify(id)}`,()=>assert.throws(()=>assertArticleId(id)));
 }
-for(const id of ['0','01','-1','1.5',1,'20261005T000000Z-abc123','9007199254740992','article/a/20260230T000000000Z-abcdef123456','article/a/20261005T250000000Z-abcdef123456','article/a/20261005T000000000Z-abc'])test(`invalid comment ID: ${id}`,()=>assert.throws(()=>assertCommentId(id)));
+for(const id of ['0','01','-1','1.5',1,'20261005T000000Z-abc123','9007199254740992','article/a/comments-0','article/a/comments-01','article/a/comments--1','article/a/comments-1.5','article/a/comments-9007199254740992','article/a/comment-1','comments-1','article/a/20261005T000000000Z-abcdef123456'])test(`invalid comment ID: ${id}`,()=>assert.throws(()=>assertCommentId(id)));
 test('prefilled form carries article and reply, no version/timestamp/hash boilerplate',()=>{
  const article={title:'标题 --> <script> & 0721c-meta',url:'https://blog.example/article/a'};
  const url=new URL(buildCommentIssueUrl({repository:'example/comments',articleId:id,replyTo:record(2).id,article}));
@@ -47,4 +47,11 @@ test('settings allow readable disabled URL paths and remain strict',()=>{
  assert.deepEqual(validateSettings({articlePolicy:{disabledIds:[id]}}).articlePolicy,{mode:'open',disabledIds:[id]});
  assert.throws(()=>validateSettings({articlePolicy:{disabledIds:['../a']}}));
  assert.throws(()=>validateSettings({token:'not-public'}));
+});
+
+
+test('Issue-number IDs accept safe limits while old record and reply IDs are rejected', () => {
+  assert.equal(assertCommentId(`${id}/comments-9007199254740991`), `${id}/comments-9007199254740991`);
+  const legacy = `${id}/20261005T091230000Z-abcdef123456`;
+  assert.throws(() => parseIssueBody(metadataLine({blog_id:id,reply_to:legacy}) + '\nbody'), e => e.code === 'INVALID_COMMENT_ID');
 });

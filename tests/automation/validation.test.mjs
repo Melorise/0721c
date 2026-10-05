@@ -28,13 +28,18 @@ test('validation checks actual head and rejects extra executable/workflow files 
   }
 });
 test('approved record modifications/removals and candidate branch/path mismatches fail', async () => {
-  for (const kind of ['modified', 'removed', 'wrongpath', 'wrongid']) {
+  for (const kind of ['modified', 'removed', 'wrongpath', 'wrongid', 'wrongissue']) {
     const { mock, result, branch } = await setup({ records: [record(99)] });
     let entries = mock.entries(result.candidate.sha);
     if (kind === 'modified') entries.find(e => e.path === `${record(99).id}.json`).sha = mock.blob(serialize(record(99, { body_markdown: 'Changed approved body' })));
     if (kind === 'removed') entries = entries.filter(e => e.path !== `${record(99).id}.json`);
     if (kind === 'wrongpath') entries.find(e => e.path === result.candidate.path).path = 'other/path/1.json';
     if (kind === 'wrongid') entries.find(e => e.path === result.candidate.path).sha = mock.blob(serialize(record(2)));
+    if (kind === 'wrongissue') {
+      const entry = entries.find(e => e.path === result.candidate.path);
+      entry.path = `${record(2).id}.json`;
+      entry.sha = mock.blob(serialize(record(2)));
+    }
     mock.refs.set(branch, mock.commit(mock.seedTree(entries), [mock.commentsSha]));
     await assert.rejects(validatePullRequest({ client: mock.client, prNumber: result.pr.number }));
     assert.equal(mock.statuses.at(-1).state, 'failure');

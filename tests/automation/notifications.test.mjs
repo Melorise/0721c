@@ -13,7 +13,7 @@ async function fixture({ reply = false, email = 'alice@example.com', ...options 
   const parent = record(1);
   const mock = new MockGitHub({ settings, records: reply ? [parent] : [], ...options });
   mock.users.set(parent.author.login, { login: parent.author.login, email });
-  const input = issue({ user: { login: 'bob', avatar_url: 'https://avatars.githubusercontent.com/u/33' }, body: issueBody({ replyTo: reply ? parent.id : null, article: { title: 'Article title', url: 'https://blog.example/' + parent.blog_id } }) });
+  const input = issue({ number: reply ? 2 : 1, user: { login: 'bob', avatar_url: 'https://avatars.githubusercontent.com/u/33' }, body: issueBody({ replyTo: reply ? parent.id : null, article: { title: 'Article title', url: 'https://blog.example/' + parent.blog_id } }) });
   const intake = await runIntake(intakeOptions(mock, input));
   const pr = mock.closePR(intake.pr.number, true);
   const calls = [], delivered = new Map();

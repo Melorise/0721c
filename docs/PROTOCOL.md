@@ -21,17 +21,17 @@ Content 适配器会解码 URL 路径中的百分号编码并规范为 NFC；例
 
 记录保存于 `comments` 分支，每条评论一个文件，路径为 `<id>.json`。
 
-评论 ID 由文章 ID、UTC 毫秒时间戳和 12 位随机十六进制字符串组成：
+评论 ID 由文章 ID 和 GitHub Issue 编号组成：
 
 ```text
-<文章 ID>/YYYYMMDDTHHmmssSSSZ-<随机字符串>
+<文章 ID>/comments-<Issue 编号>
 ```
 
 例如：
 
 ```json
 {
-  "id": "article/essay/2026-09-28-hello/20261005T020000000Z-a1b2c3d4e5f6",
+  "id": "article/essay/2026-09-28-hello/comments-37",
   "blog_id": "article/essay/2026-09-28-hello",
   "reply_to": null,
   "author": {
@@ -54,11 +54,11 @@ Content 适配器会解码 URL 路径中的百分号编码并规范为 NFC；例
 | `reply_to` | 是 | 根评论为 `null`；回复为同篇文章中父评论的完整 ID |
 | `author.login` | 是 | 投稿者的 GitHub 用户名 |
 | `author.avatar_url` | 否 | 投稿者头像地址 |
-| `created_at` | 是 | UTC ISO 时间，与 ID 中的时间戳对应 |
+| `created_at` | 是 | GitHub Issue 的创建时间，使用 UTC ISO 格式 |
 | `body_markdown` | 是 | Markdown 正文 |
 | `article` | 否 | 用于审核显示的文章信息；提供时必须包含 `title`，可附带 `url` |
 
-投稿时，作者和时间取自 GitHub Issue，ID 由工作流生成。随机后缀使用 6 字节随机数据；生成时检查现有记录，出现重复则重新生成。
+投稿时，作者、创建时间和编号取自 GitHub Issue。例如 Issue #37 对应 `comments-37.json`；同一评论仓库中的 Issue 编号唯一。
 
 修改正文时保留 ID、文章 ID 和创建时间。树构建要求父评论存在、各评论 ID 唯一，且回复链不形成循环。
 
@@ -74,7 +74,7 @@ Content 适配器会解码 URL 路径中的百分号编码并规范为 NFC；例
   "comments_enabled": true,
   "comments": [
     {
-      "id": "article/essay/2026-09-28-hello/20261005T020000000Z-a1b2c3d4e5f6",
+      "id": "article/essay/2026-09-28-hello/comments-37",
       "reply_to": null,
       "author": { "login": "example-user" },
       "created_at": "2026-10-05T02:00:00Z",
@@ -93,7 +93,7 @@ Content 适配器会解码 URL 路径中的百分号编码并规范为 NFC；例
 | `comments_enabled` | 是否接受新评论和回复 |
 | `comments` | 根评论数组；每个节点的 `children` 为回复数组 |
 
-节点保留评论 ID、父评论 ID、作者、时间和正文。根评论和同级回复按创建时间升序排列，同一时间按 ID 排序。
+节点保留评论 ID、父评论 ID、作者、时间和正文。根评论和同级回复按创建时间升序排列，同一时间按 Issue 编号的数值升序排列。
 
 客户端请求当前文章对应的文件。404 返回空评论结果；其他 HTTP、网络和格式错误交由调用方处理。客户端返回的结果为只读对象。
 

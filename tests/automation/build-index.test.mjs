@@ -23,7 +23,7 @@ test('allowlist policy and full paths preserve separate articles with the same l
   assert.equal(result.indexes['notes/essay/2026-09-28-hello'].comments_enabled, false);
   assert.equal(result.indexes[ARTICLE].total_count, 1);
 });
-test('readable timestamp/random IDs, root/reply counts and core sorting are preserved', () => {
+test('readable Issue-number IDs, root/reply counts and core sorting are preserved', () => {
   const result = buildIndexes({ records: [record(10), record(2), record(11, { reply_to: record(10).id })], settings: {} }).indexes[ARTICLE];
   assert.equal(result.total_count, 3); assert.equal(result.root_count, 2);
   assert.deepEqual(result.comments.map(n => n.id), [2, 10].map(n => record(n).id));

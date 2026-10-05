@@ -28,7 +28,7 @@ export function validateCommentRecord(value) {
   const record = { id: assertCommentId(value.id), blog_id: assertArticleId(value.blog_id),
     reply_to: parent(value.reply_to), author: authorValue(value.author), created_at: utcDate(value.created_at, 'created_at'),
     body_markdown: bodyValue(value.body_markdown) };
-  assertCommentIdentity(record.id, record.blog_id, record.created_at);
+  assertCommentIdentity(record.id, record.blog_id);
   if (value.article !== undefined) record.article = articleValue(value.article);
   if (record.reply_to === record.id) fail('CYCLE', 'A comment may not reply to itself');
   return record;
@@ -55,7 +55,7 @@ export function validateArticleIndex(value) {
       ids.add(id);
       if (parent(node.reply_to) !== parentId) fail('INVALID_PARENT', 'Index reply_to does not match the tree parent');
       const created_at = utcDate(node.created_at, 'created_at');
-      assertCommentIdentity(id, blog_id, created_at);
+      assertCommentIdentity(id, blog_id);
       if (!Array.isArray(node.children)) fail('INVALID_FIELD', 'children must be an array');
       const checked = { id, reply_to: parentId, author: authorValue(node.author), created_at, body_markdown: bodyValue(node.body_markdown), children: [] };
       if (previous && compareNodes(previous, checked) > 0) fail('INVALID_ORDER', 'Index siblings must be ordered by created_at and ID');

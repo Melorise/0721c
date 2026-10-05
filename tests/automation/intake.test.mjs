@@ -5,12 +5,12 @@ import { record } from '../core/fixtures.mjs';
 import { ARTICLE, MockGitHub, issue, issueBody, intakeOptions, dispatchOptions } from './mock-github.mjs';
 const writes = mock => mock.calls.filter(c => c.method !== 'GET');
 
-test('intake saves article path + timestamp + random comment ID, validates the PR, then closes the Issue', async () => {
+test('intake saves article path + Issue number comment ID, validates the PR, then closes the Issue', async () => {
   const mock = new MockGitHub(), source = issue({ number: 37, body: issueBody({ article: { title: 'My article', url: 'https://blog.example/' + ARTICLE }, body: 'Full **comment**\nLast line.' }) });
   const result = await runIntake(intakeOptions(mock, source));
-  assert.equal(result.status, 'pending'); assert.ok(result.candidate.record.id.startsWith(`${ARTICLE}/20261005T091230000Z-`));
-  assert.match(result.candidate.record.id.split('/').at(-1), /^20261005T091230000Z-[a-f0-9]{12}$/);
+  assert.equal(result.status, 'pending'); assert.equal(result.candidate.record.id, `${ARTICLE}/comments-37`);
   assert.equal(result.candidate.path, `${result.candidate.record.id}.json`);
+  assert.notEqual(result.pr.number, source.number);
   assert.equal(result.pr.head.ref, 'comment-37'); assert.equal(result.pr.base.ref, 'comments');
   assert.deepEqual(Object.keys(result.candidate.record).sort(), ['article', 'author', 'blog_id', 'body_markdown', 'created_at', 'id', 'reply_to']);
   assert.deepEqual(result.candidate.record.author, { login: 'alice', avatar_url: source.user.avatar_url });
@@ -168,14 +168,16 @@ test('reviews closing at later conversion steps also close the Issue without reo
 });
 
 
-test('same article and timestamp generate distinct IDs; both pending records survive retries', async () => {
+test('distinct Issues at the same timestamp produce deterministic IDs and keep both records', async () => {
   const mock = new MockGitHub();
   const first = await runIntake(intakeOptions(mock));
   const second = await runIntake(intakeOptions(mock, issue({ number: 2 })));
   assert.notEqual(first.candidate.record.id, second.candidate.record.id);
   assert.equal(first.candidate.record.created_at, second.candidate.record.created_at);
   assert.equal(first.candidate.record.blog_id, second.candidate.record.blog_id);
-  assert.ok(mock.calls.some(call => call.path === '/git/matching-refs/heads/comment-'));
+  assert.equal(first.candidate.record.id, `${ARTICLE}/comments-1`);
+  assert.equal(second.candidate.record.id, `${ARTICLE}/comments-2`);
+  assert.equal(mock.calls.some(call => call.path.startsWith('/git/matching-refs/')), false);
   const repeated = await runIntake(dispatchOptions(mock));
   assert.equal(repeated.candidate.record.id, first.candidate.record.id);
   mock.closePR(first.pr.number, true);
@@ -184,15 +186,10 @@ test('same article and timestamp generate distinct IDs; both pending records sur
   assert.ok(files[first.candidate.path]); assert.ok(files[second.candidate.path]);
 });
 
-test('forced random collisions retry; exhaustion cannot return an occupied ID', () => {
-  const prefix = `${ARTICLE}/20261005T091230000Z-`;
-  const occupied = new Set([prefix + 'aaaaaaaaaaaa']);
-  let calls = 0;
-  const id = createCommentId(ARTICLE, record().created_at, occupied, size => {
-    assert.equal(size, 6);
-    return Buffer.from(++calls === 1 ? 'aaaaaaaaaaaa' : 'bbbbbbbbbbbb', 'hex');
-  });
-  assert.equal(id, prefix + 'bbbbbbbbbbbb'); assert.equal(calls, 2);
-  assert.throws(() => createCommentId(ARTICLE, record().created_at, occupied, () => Buffer.from('aaaaaaaaaaaa', 'hex')), /unique comment ID/);
-  assert.deepEqual([...occupied], [prefix + 'aaaaaaaaaaaa']);
+test('Issue IDs are deterministic, readable and limited to positive safe integers', () => {
+  assert.equal(createCommentId(ARTICLE, 37), `${ARTICLE}/comments-37`);
+  assert.equal(createCommentId(ARTICLE, 37), createCommentId(ARTICLE, 37));
+  assert.equal(createCommentId('文章/随笔/hello.world', 9007199254740991), '文章/随笔/hello.world/comments-9007199254740991');
+  for (const number of [0, -1, 1.5, '37', NaN, 9007199254740992]) assert.throws(() => createCommentId(ARTICLE, number));
+  assert.throws(() => createCommentId('../unsafe', 1));
 });

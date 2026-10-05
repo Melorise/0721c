@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { tmpdir, homedir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parsePackOutput } from './pack-output.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
@@ -31,7 +32,7 @@ const install = (...packages) => run('npm', ['install', '--offline', '--ignore-s
 const git = (directory, ...args) => run('git', ['--no-optional-locks', '-c', 'core.fsmonitor=false', '-C', directory, ...args]);
 let packed;
 try {
-  packed = JSON.parse(run('npm', ['pack', '--offline', '--json', '--ignore-scripts', '--pack-destination', artifacts], root))[0];
+  packed = parsePackOutput(run('npm', ['pack', '--offline', '--json', '--ignore-scripts', '--pack-destination', artifacts], root), pkg.name);
   assert.equal(packed.name, pkg.name);
   assert.equal(packed.version, pkg.version);
   assert.equal(packed.filename, '0721c-' + pkg.version + '.tgz');
@@ -49,7 +50,7 @@ try {
   run(process.execPath, ['--input-type=module', '-e', `
     import assert from 'node:assert/strict'; import * as core from '0721c';
     const articleId = 'article/essay/slug';
-    const index = {blog_id:articleId,total_count:1,root_count:1,comments_enabled:true,comments:[{id:'article/essay/slug/20261005T000000000Z-abcdef123456',reply_to:null,author:{login:'user'},created_at:'2026-10-05T00:00:00Z',body_markdown:'Hello',children:[]}]};
+    const index = {blog_id:articleId,total_count:1,root_count:1,comments_enabled:true,comments:[{id:'article/essay/slug/comments-37',reply_to:null,author:{login:'user'},created_at:'2026-10-05T00:00:00Z',body_markdown:'Hello',children:[]}]};
     let requests = 0;
     const client = core.createClient({repository:'example-owner/site-comments',async fetchImpl(url,options){
       assert.equal(options.credentials,'omit'); requests++;
@@ -60,7 +61,7 @@ try {
       assert.ok([ 'https://raw.githubusercontent.com/example-owner/site-comments/index/article/essay/slug.json', 'https://raw.githubusercontent.com/example-owner/site-comments/'+'a'.repeat(40)+'/article/essay/slug.json' ].includes(url));
       return new Response(JSON.stringify(index));
     }});
-    assert.equal((await client.getComments(articleId)).comments[0].id,'article/essay/slug/20261005T000000000Z-abcdef123456'); assert.equal(requests,1);
+    assert.equal((await client.getComments(articleId)).comments[0].id,'article/essay/slug/comments-37'); assert.equal(requests,1);
     assert.equal((await client.getComments(articleId,{force:true})).totalCount,1); assert.equal(requests,3);
     assert.equal('getManifest' in client,false);
     for (const removed of ['validateIndexManifest','PROTOCOL_VERSION','LAYOUT_VERSION']) assert.equal(removed in core,false);
@@ -99,8 +100,8 @@ try {
     for (const path of ${JSON.stringify(runtimePaths.filter(path => path.endsWith('.mjs')).map(path => `./.0721c/runtime/${path.slice(4)}`))}) await import(path);
     const {buildIndexes} = await import('./.0721c/runtime/automation/build-index.mjs');
     const {validateSettings} = await import('./.0721c/runtime/core/index.mjs');
-    const result = buildIndexes({records:[{id:'article/essay/slug/20261005T000000000Z-abcdef123456',blog_id:'article/essay/slug',reply_to:null,author:{login:'user'},created_at:'2026-10-05T00:00:00Z',body_markdown:'Hello'}],settings:validateSettings()});
-    assert.equal(result.indexes['article/essay/slug'].comments[0].id,'article/essay/slug/20261005T000000000Z-abcdef123456'); assert.equal('manifest' in result,false);
+    const result = buildIndexes({records:[{id:'article/essay/slug/comments-37',blog_id:'article/essay/slug',reply_to:null,author:{login:'user'},created_at:'2026-10-05T00:00:00Z',body_markdown:'Hello'}],settings:validateSettings()});
+    assert.equal(result.indexes['article/essay/slug'].comments[0].id,'article/essay/slug/comments-37'); assert.equal('manifest' in result,false);
   `], destination);
   const refsBefore = git(destination, 'show-ref');
   assert.equal(JSON.parse(local(['init', destination, '--json'])).unchanged, true);

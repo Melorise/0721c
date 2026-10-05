@@ -53,7 +53,7 @@ export async function notifyComment({ client, event, context, indexes, env = pro
   const record = validateCommentRecord(json(await readBlob(client, {
     path: file.filename, sha: file.sha, type: 'blob', mode: '100644',
   }), 'approved comment'));
-  if (recordPath(record) !== file.filename) throw failure('COMMENT_PATH_MISMATCH');
+  if (recordPath(record) !== file.filename || record.id !== `${record.blog_id}/comments-${pr.head.ref.slice('comment-'.length)}`) throw failure('COMMENT_PATH_MISMATCH');
   const index = indexes[record.blog_id];
   const published = findNode(index, record.id);
   if (!published || published.body_markdown !== record.body_markdown || published.author.login !== record.author.login || published.reply_to !== record.reply_to || published.created_at !== record.created_at) throw failure('COMMENT_NOT_PUBLISHED');

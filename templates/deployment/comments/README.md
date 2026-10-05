@@ -3,9 +3,9 @@
 本分支保存网站评论的源记录，每条评论对应一个 JSON 文件：
 
 ```text
-<文章 ID>/<UTC 毫秒时间戳>-<12 位随机十六进制字符串>.json
+<文章 ID>/comments-<Issue 编号>.json
 
-article/essay/hello/20261005T020000000Z-a1b2c3d4e5f6.json
+article/essay/hello/comments-37.json
 ```
 
 评论通过审核 PR 加入本分支。合并后，发布工作流生成 `index` 分支中的文章评论树。

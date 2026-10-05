@@ -3,7 +3,7 @@ export const ARTICLE_ID = 'article/essay/slug';
 export function comment(number, options = {}) {
   const created_at = options.created_at ?? new Date(Date.parse('2026-10-02T09:00:00Z') + number * 1000).toISOString();
   return {
-    id: `${ARTICLE_ID}/${new Date(created_at).toISOString().replace(/[-:.]/g, '')}-${number.toString(16).padStart(12, '0')}`, reply_to: null,
+    id: `${ARTICLE_ID}/comments-${number}`, reply_to: null,
     author: { login: `user-${number}`, avatar_url: `https://avatars.githubusercontent.com/u/${number}` },
     created_at, body_markdown: `Comment ${number}`, children: [],
     ...options,

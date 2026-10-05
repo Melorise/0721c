@@ -1,21 +1,11 @@
-import { randomBytes } from 'node:crypto';
-import { commentTimestamp } from '../core/shared.mjs';
 import { parseIssueBody, validateCommentRecord, assertArticleId } from '../core/index.mjs';
 import { buildIndexes, commentsEnabled } from './build-index.mjs';
 import { validatePullRequest } from './validate-comment.mjs';
 import { buildReviewPullRequest } from './review-presentation.mjs';
-import { actionContext, loadDeployment, requiredRef, readRecords, readTree, parseRecordPath, ref, list, positiveInteger, inputNumber, candidateFromCommit, createCommit, recordPath, serialize, isDirectEntry, reportFailure } from './runtime.mjs';
+import { actionContext, loadDeployment, requiredRef, readRecords, ref, list, positiveInteger, inputNumber, candidateFromCommit, createCommit, recordPath, serialize, isDirectEntry, reportFailure } from './runtime.mjs';
 
-// A saved Issue branch makes retries reuse the first capture; it is not the comment ID.
-export function createCommentId(articleId, createdAt, existingIds = new Set(), entropy = randomBytes) {
-  const prefix = `${assertArticleId(articleId)}/${commentTimestamp(createdAt)}-`;
-  for (let attempt = 0; attempt < 8; attempt++) {
-    const suffix = entropy(6).toString('hex');
-    if (!/^[0-9a-f]{12}$/.test(suffix)) throw new Error('Invalid comment ID entropy');
-    const id = prefix + suffix;
-    if (!existingIds.has(id)) return id;
-  }
-  throw new Error('Unable to allocate a unique comment ID; existing comments were not changed');
+export function createCommentId(articleId, issueNumber) {
+  return `${assertArticleId(articleId)}/comments-${positiveInteger(issueNumber, 'Issue number')}`;
 }
 export async function findCommentPullRequest(client, number) {
   const branch = `comment-${positiveInteger(number, 'Issue number')}`;
@@ -54,15 +44,7 @@ export async function runIntake({ client, event, eventName, mainCommit }) {
     const parsed = parseIssueBody(issue.body, context.settings.limits);
     const parent = await requiredRef(client, 'heads/comments');
     const approved = await readRecords(client, parent);
-    const existingIds = new Set(approved.records.map(record => record.id));
-    const pending = await list(client, `${client.basePath}/git/matching-refs/heads/comment-`);
-    for (const saved of pending) {
-      const tree = await readTree(client, saved.object.sha);
-      for (const entry of tree.entries) {
-        if (entry.type === 'blob' && entry.path.endsWith('.json')) existingIds.add(parseRecordPath(entry.path).id);
-      }
-    }
-    const id = createCommentId(parsed.metadata.blog_id, issue.created_at, existingIds);
+    const id = createCommentId(parsed.metadata.blog_id, number);
     const record = validateCommentRecord({
       id, blog_id: parsed.metadata.blog_id, reply_to: parsed.metadata.reply_to,
       author: { login: issue.user?.login, ...(issue.user?.avatar_url ? { avatar_url: issue.user.avatar_url } : {}) },
@@ -83,6 +65,7 @@ export async function runIntake({ client, event, eventName, mainCommit }) {
       candidate = await candidateFromCommit(client, existing.object.sha);
     }
   }
+  if (candidate.record.id !== createCommentId(candidate.record.blog_id, number)) throw new Error('Saved comment ID does not match the Issue number');
   const approved = await readRecords(client, await requiredRef(client, 'heads/comments'));
   const presentation = buildReviewPullRequest(candidate.record, {
     articles: context.articles,

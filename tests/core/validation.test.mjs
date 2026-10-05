@@ -7,7 +7,7 @@ test('record stores only useful data and preserves optional article context',()=
  assert.deepEqual(validateCommentRecord(r),r);
  for(const extra of [{source:{}},{schema_version:1},{author:{id:1,login:'user'}},{id:'0'},{blog_id:'../a'},{article:{title:'',url:'https://blog.example'}}])assert.throws(()=>validateCommentRecord({...r,...extra}));
 });
-test('tree is chronological, ties sort by readable comment ID; nested replies are complete',()=>{
+test('tree is chronological, ties sort by numeric Issue number; nested replies are complete',()=>{
  const tree=buildCommentTree([record(10),record(3,{reply_to:record(2).id}),record(2),record(1)]);
  assert.deepEqual(tree.comments.map(x=>x.id),[1,2,10].map(n=>record(n).id));assert.equal(tree.comments[1].children[0].id,record(3).id);
  assert.equal(tree.total_count,4);assert.equal(tree.root_count,3);assert.equal(tree.comments[0].issue_number,undefined);
@@ -35,11 +35,11 @@ test('disabled and empty indexes are first-class readable files',()=>{
 });
 
 
-test('record and index IDs must match their article and creation timestamp', () => {
+test('record and index IDs must match their article; creation time is independent', () => {
  const original=record();
  assert.throws(()=>validateCommentRecord({...original,blog_id:'other/article'}));
- assert.throws(()=>validateCommentRecord({...original,created_at:'2026-10-05T09:12:31Z'}));
+ assert.equal(validateCommentRecord({...original,created_at:'2026-10-05T09:12:31Z'}).id, original.id);
  assert.throws(()=>validateArticleIndex({...article(),blog_id:'other/article'}));
  const data=article(); data.comments[0].created_at='2026-10-05T09:12:31Z';
- assert.throws(()=>validateArticleIndex(data));
+ assert.equal(validateArticleIndex(data).comments[0].id, original.id);
 });

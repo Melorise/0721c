@@ -23,11 +23,11 @@ test('every runtime module imports without fetching or executing an Action and n
     assert.doesNotMatch(source, /execSync|execFile|spawn|eval\s*\(|reservations|\.0721c\/deployment\.json|\.0721c\/manifest\.json/);
   }
 });
-test('full nested Unicode article paths round trip; traversal and malformed timestamp/random filenames fail', () => {
+test('full nested Unicode article paths round trip; traversal and malformed Issue-number filenames fail', () => {
   const item = record(37, { blog_id: '文章/随笔/hello.world' });
   assert.equal(recordPath(item), `${item.id}.json`);
   assert.deepEqual(parseRecordPath(recordPath(item)), { blog_id: item.blog_id, id: item.id });
-  for (const path of ['/article/1.json', 'article/../1.json', 'article/%2f/1.json', 'article/01.json', 'article/random.json', '1.json']) assert.throws(() => parseRecordPath(path));
+  for (const path of ['/article/1.json', 'article/../1.json', 'article/%2f/1.json', 'article/01.json', 'article/random.json', '1.json', 'article/comments-0.json', 'article/comments-01.json', 'article/comments-9007199254740992.json', 'article/20261005T000000000Z-abcdef123456.json']) assert.throws(() => parseRecordPath(path));
 });
 test('recursive directory SHA changes are ignored while only one JSON file may be added', () => {
   const blob = { path: 'README.md', mode: '100644', type: 'blob', sha: 'a'.repeat(40) };

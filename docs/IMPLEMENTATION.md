@@ -50,7 +50,7 @@ Markdown 渲染位于 `src/vue/markdown.mjs`；修改渲染规则时，检查清
 
 ### 投稿转换
 
-`intake-comment.mjs` 解析 Issue，将作者、创建时间和正文保存到 `comment-<Issue 编号>` 候选分支。它创建目标为 `comments` 的 PR，校验实际 PR head，完成后关闭 Issue。
+`intake-comment.mjs` 解析 Issue，以 `<文章 ID>/comments-<Issue 编号>.json` 保存作者、创建时间和正文，提交到 `comment-<Issue 编号>` 候选分支。它创建目标为 `comments` 的 PR，校验实际 PR head，完成后关闭 Issue。
 
 重试先查已有 PR 和候选分支，复用保存的记录。修改重试逻辑时，应覆盖“候选已保存、PR 尚未创建”“PR 已创建、Issue 尚未关闭”等中断位置。
 

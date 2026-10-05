@@ -4,6 +4,7 @@ import { readFile, access, readdir, mkdtemp, mkdir, writeFile, rm } from 'node:f
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { parsePackOutput } from '../scripts/pack-output.mjs';
 
 const root = new URL('../', import.meta.url);
 const pkg = JSON.parse(await readFile(new URL('package.json', root), 'utf8'));
@@ -96,4 +97,20 @@ test('deployment runtime is a self-contained copy of this exact package version'
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+
+test('pack output accepts npm 11 arrays and npm 12 package-keyed objects', () => {
+  const metadata = {name:'0721c', version:'0.3.0', filename:'0721c-0.3.0.tgz', files:[]};
+  assert.deepEqual(parsePackOutput(JSON.stringify([metadata]), '0721c'), metadata);
+  assert.deepEqual(parsePackOutput(JSON.stringify({'0721c':metadata}), '0721c'), metadata);
+  const scoped = {...metadata, name:'@example/comments'};
+  assert.deepEqual(parsePackOutput(JSON.stringify({'@example/comments':scoped}), scoped.name), scoped);
+});
+
+test('missing pack output reports which package is missing rather than dereferencing undefined', () => {
+  for (const output of [[], {}, {other:{name:'other'}}, null]) {
+    assert.throws(() => parsePackOutput(JSON.stringify(output), '0721c'), /npm pack did not return metadata for 0721c/);
+  }
+  assert.throws(() => parsePackOutput('invalid JSON', '0721c'), SyntaxError);
 });

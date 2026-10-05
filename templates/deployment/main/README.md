@@ -7,7 +7,7 @@
 | 分支 | 内容 |
 | --- | --- |
 | `main` | 配置、Issue 设置、工作流和 `.0721c/runtime/` 运行文件 |
-| `comments` | 已审核评论，路径为 `<文章 ID>/<时间戳>-<随机字符串>.json` |
+| `comments` | 已审核评论，路径为 `<文章 ID>/comments-<Issue 编号>.json` |
 | `index` | 文章评论树，路径为 `<文章 ID>.json` |
 
 文章 ID 来自文章 URL 路径，例如 `article/essay/hello`。

@@ -38,21 +38,17 @@ function validCalendar(year, month, day, hour, minute, second) {
 }
 export function assertCommentId(value) {
   const slash = typeof value === 'string' ? value.lastIndexOf('/') : -1;
-  const match = slash > 0 && /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(\d{3})Z-[0-9a-f]{12}$/.exec(value.slice(slash + 1));
-  if (!match || !validCalendar(...match.slice(1, 7).map(Number))) {
-    fail('INVALID_COMMENT_ID', 'Comment ID must contain the article path, UTC timestamp and random suffix');
+  const match = slash > 0 && /^comments-([1-9][0-9]{0,15})$/.exec(value.slice(slash + 1));
+  if (!match || !Number.isSafeInteger(Number(match[1]))) {
+    fail('INVALID_COMMENT_ID', 'Comment ID must contain the article path and a positive GitHub Issue number');
   }
   assertArticleId(value.slice(0, slash));
   return value;
 }
-export function commentTimestamp(createdAt) {
-  utcDate(createdAt, 'created_at');
-  return new Date(createdAt).toISOString().replace(/[-:.]/g, '');
-}
-export function assertCommentIdentity(id, articleId, createdAt) {
+export function assertCommentIdentity(id, articleId) {
   assertCommentId(id);
-  if (!id.startsWith(`${articleId}/${commentTimestamp(createdAt)}-`)) {
-    fail('INVALID_COMMENT_ID', 'Comment ID does not match its article or creation time');
+  if (id.slice(0, id.lastIndexOf('/')) !== articleId) {
+    fail('INVALID_COMMENT_ID', 'Comment ID does not match its article');
   }
 }
 export function utcDate(value, label) {
@@ -143,7 +139,7 @@ export function authorValue(value) {
 }
 export function compareNodes(a, b) {
   const difference = Date.parse(a.created_at) - Date.parse(b.created_at);
-  return difference || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  return difference || Number(a.id.slice(a.id.lastIndexOf('-') + 1)) - Number(b.id.slice(b.id.lastIndexOf('-') + 1));
 }
 export function deepFreeze(value) {
   const pending = [value];

@@ -1,6 +1,6 @@
 {
   "name": "0721c",
-  "version": "0.2.6",
+  "version": "0.3.0",
   "description": "GitHub Issue submissions, human review and readable static comment trees",
   "type": "module",
   "engines": {
