@@ -1,0 +1,79 @@
+{
+  "name": "0721c",
+  "version": "0.2.5",
+  "description": "GitHub Issue submissions, human review and readable static comment trees",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/core/index.d.ts",
+      "default": "./src/core/index.mjs"
+    },
+    "./vue": {
+      "types": "./src/vue/index.d.ts",
+      "default": "./src/vue/index.mjs"
+    },
+    "./style.css": "./styles/index.css",
+    "./package.json": "./package.json",
+    "./content": {
+      "types": "./src/content/index.d.ts",
+      "default": "./src/content/index.mjs"
+    },
+    "./nuxt-content": {
+      "types": "./src/content/vue.d.ts",
+      "default": "./src/content/vue.mjs"
+    },
+    "./nuxt": {
+      "types": "./src/nuxt/index.d.ts",
+      "default": "./src/nuxt/index.mjs"
+    }
+  },
+  "bin": {
+    "0721c": "src/cli/index.mjs"
+  },
+  "files": [
+    "src/",
+    "styles/",
+    "schemas/",
+    "templates/",
+    "README.md",
+    "docs/"
+  ],
+  "scripts": {
+    "test": "node --test tests/*.test.mjs tests/core/*.test.mjs tests/automation/*.test.mjs tests/cli/*.test.mjs tests/vue/*.test.mjs tests/content/*.test.mjs tests/nuxt/*.test.mjs",
+    "test:types": "tsc -p tsconfig.test.json",
+    "pack:verify": "node scripts/verify-pack.mjs",
+    "prepublishOnly": "npm test && npm run test:types && npm run pack:verify"
+  },
+  "dependencies": {
+    "dompurify": "3.4.16",
+    "lucide": "^0.468.0",
+    "markdown-it": "15.0.2"
+  },
+  "peerDependencies": {
+    "@nuxt/kit": ">=3.17.0 <5",
+    "vue": ">=3.5.0 <4"
+  },
+  "peerDependenciesMeta": {
+    "vue": {
+      "optional": true
+    },
+    "@nuxt/kit": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@nuxt/kit": "4.5.2",
+    "jsdom": "30.1.1",
+    "typescript": "5.9.3",
+    "vue": "3.5.43"
+  },
+  "license": "UNLICENSED",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/",
+    "tag": "latest"
+  }
+}

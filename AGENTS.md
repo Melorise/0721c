@@ -1,0 +1,8 @@
+# 0721c independent project
+All plugin code belongs here, never in /home/tippy/Dev/melorise-blog.
+Read docs/INTERFACE_CONTRACT.md before implementing. Respect other agents' disjoint ownership.
+User now authorizes independent plugin unit tests and packaging. No blog build/generate/dev server, no npm publish, no remote GitHub writes. Tests must use fixtures/mocks, not live mutation. No commits unless specifically requested.
+Use ordinary ESM .mjs plus declaration files; core must be browser-safe, automation/CLI Node-only, Vue optional. Core/automation remain framework/site-independent and have no serverless dependency. User explicitly requires optional Nuxt Content adaptation: framework imports belong ONLY to optional src/nuxt and src/content Vue adapters, never core/automation. All adapter implementation stays in this independent project; host only installs the packaged artifact, configures it and mounts once in its shared page template.
+The workspace sandbox may require exec_command require_escalated to write this sibling directory. Never put temporary plugin code in the blog to evade that.
+
+2026-10-04 trust boundary correction: no desktop CLI remote writes, automatic repository configuration, administrator credential lookup or gh invocation. init/upgrade are local-only; doctor is anonymous public GET-only. Permissions and optional repository Actions Secrets must be configured manually by the user on GitHub. Actions alone may use repository-scoped runtime tokens. Do not restore configure/resolveToken or implicit GH_TOKEN access. Generated ready flags mean complete files, not proof of remote permission setup.

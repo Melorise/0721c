@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Article comments",
+  "type": "object",
+  "properties": {
+    "blog_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*(?:/[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*)*$"
+    },
+    "total_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "root_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "comments_enabled": {
+      "type": "boolean"
+    },
+    "comments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    }
+  },
+  "required": [
+    "blog_id",
+    "total_count",
+    "root_count",
+    "comments_enabled",
+    "comments"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "node": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*(?:/[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*)*/[0-9]{8}T[0-9]{9}Z-[0-9a-f]{12}$",
+          "maxLength": 545
+        },
+        "reply_to": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*(?:/[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*)*/[0-9]{8}T[0-9]{9}Z-[0-9a-f]{12}$",
+              "maxLength": 545
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "author": {
+          "type": "object",
+          "properties": {
+            "login": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "avatar_url": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "required": [
+            "login"
+          ],
+          "additionalProperties": false
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "body_markdown": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8000
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "reply_to",
+        "author",
+        "created_at",
+        "body_markdown",
+        "children"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

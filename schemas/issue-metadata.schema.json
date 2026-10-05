@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Issue routing",
+  "type": "object",
+  "properties": {
+    "blog_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*(?:/[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*)*$"
+    },
+    "reply_to": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*(?:/[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*)*/[0-9]{8}T[0-9]{9}Z-[0-9a-f]{12}$",
+          "maxLength": 545
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "article": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "blog_id"
+  ],
+  "additionalProperties": false
+}

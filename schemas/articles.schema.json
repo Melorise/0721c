@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://0721c.dev/schemas/v1/articles.schema.json",
+  "title": "Articles",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "articles": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*(?:/[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*)*$",
+        "minLength": 1,
+        "maxLength": 512
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https?://",
+            "maxLength": 4096,
+            "description": "core also rejects credentials and invalid URLs."
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "articles"
+  ]
+}

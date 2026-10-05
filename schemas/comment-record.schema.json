@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Comment",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*(?:/[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*)*/[0-9]{8}T[0-9]{9}Z-[0-9a-f]{12}$",
+      "maxLength": 545
+    },
+    "reply_to": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*(?:/[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*)*/[0-9]{8}T[0-9]{9}Z-[0-9a-f]{12}$",
+          "maxLength": 545
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "author": {
+      "type": "object",
+      "properties": {
+        "login": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "avatar_url": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "login"
+      ],
+      "additionalProperties": false
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "body_markdown": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 8000
+    },
+    "blog_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*(?:/[\\p{L}\\p{N}_-][\\p{L}\\p{N}._-]*)*$"
+    },
+    "article": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "id",
+    "reply_to",
+    "author",
+    "created_at",
+    "body_markdown",
+    "blog_id"
+  ],
+  "additionalProperties": false
+}

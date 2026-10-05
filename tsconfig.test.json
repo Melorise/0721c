@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": false
+  },
+  "include": [
+    "tests/consumer.ts",
+    "tests/vue/consumer.ts",
+    "src/**/*.d.ts",
+    "tests/nuxt/consumer.ts",
+    "src/**/*.d.mts",
+    "tests/cli/consumer.ts"
+  ]
+}
