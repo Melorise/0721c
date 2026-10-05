@@ -1,5 +1,7 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 import type { createClient } from '../core/index.js';
+import type { Messages0721c } from './messages.js';
+export type { Messages0721c } from './messages.js';
 export { create0721c, use0721cConfig, provide0721cConfig } from './config.js';
 export type { Options0721c, Config0721cOptions, Config0721cSource, Config0721c } from './config.js';
 
@@ -23,6 +25,8 @@ export interface Comments0721cProps {
   fetchImpl?: ClientOptions['fetchImpl'];
   enabled?: boolean;
   title?: string;
+  /** Partial overrides, merged with app-level messages. */
+  messages?: Messages0721c;
 }
 
 export interface Comments0721cExposed {

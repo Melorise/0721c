@@ -123,6 +123,12 @@ try {
     import assert from 'node:assert/strict';
     assert.equal(typeof window,'undefined');
     const {Comments0721c,create0721c} = await import('0721c/vue'); assert.ok(Comments0721c); assert.equal(typeof create0721c,'function');
+    const {createSSRApp,h} = await import('vue');
+    const {renderToString} = await import('vue/server-renderer');
+    const app = createSSRApp({render:()=>h(Comments0721c,{articleId:'article/essay/slug'})});
+    app.use(create0721c({repository:'example/comments',messages:{loading:'Connect to GitHub',title:'Discussion'}}));
+    const html = await renderToString(app);
+    assert.ok(html.includes('Connect to GitHub')); assert.ok(html.includes('Discussion'));
     const {resolveContentArticle} = await import('0721c/content');
     assert.equal(resolveContentArticle({path:'/article/essay/slug',stem:'article/other',id:'unrelated'}).articleId,'article/essay/slug');
     const {ContentComments0721c} = await import('0721c/nuxt-content'); assert.ok(ContentComments0721c);

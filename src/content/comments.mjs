@@ -1,6 +1,7 @@
 import { computed, defineComponent, h, inject } from 'vue';
 import { Comments0721c, use0721cConfig } from '../vue/index.mjs';
 import { CONTENT_CONFIG_KEY, resolveContentArticle } from './identity.mjs';
+import { resolveMessages } from '../vue/messages.mjs';
 
 export const ContentComments0721c = defineComponent({
   name: 'ContentComments0721c',
@@ -23,7 +24,7 @@ export const ContentComments0721c = defineComponent({
     });
     return () => {
       if (article.value.error) return h('p', { ...attrs, class: ['c0721c-content-error', attrs.class], role: 'alert' },
-        config.value.locale === 'en' ? 'Comment configuration for this document is invalid.' : '本文的评论配置无效，请检查文档标识或评论设置。');
+        resolveMessages(config.value.locale, config.value.messages).invalidDocument);
       return article.value.value ? h(Comments0721c, { ...attrs, articleId: article.value.value.articleId, articleTitle: articleTitle.value, articleUrl: articleUrl.value }, slots) : null;
     };
   },

@@ -43,6 +43,7 @@ import { Comments0721c } from '0721c/vue';
 | --- | --- | --- |
 | `repository` | 空字符串 | 评论仓库，`OWNER/REPO` 或 GitHub HTTPS 仓库地址 |
 | `locale` | `zh-CN` | 界面和投稿模板语言，`zh-CN` 或 `en` |
+| `messages` | 当前语言的内置文案 | 按键覆盖评论区文本，见下文 |
 | `timeZone` | 访客浏览器时区 | 评论时间的显示时区，例如 `Asia/Shanghai`；空字符串也使用浏览器时区 |
 | `enabled` | `true` | 是否显示评论区 |
 | `indexBaseUrl` | GitHub raw 的 `index` 分支 | 索引基地址 |
@@ -62,6 +63,7 @@ import { Comments0721c } from '0721c/vue';
 | `title` | 否 | 评论区标题，默认随语言显示“评论”或“Comments” |
 | `repository` | 否 | 覆盖应用配置中的仓库 |
 | `locale` | 否 | 覆盖语言 |
+| `messages` | 否 | 按键覆盖全局文案，未指定的键继承全局配置 |
 | `timeZone` | 否 | 覆盖全局显示时区 |
 | `enabled` | 否 | 显示或隐藏此组件 |
 | `indexBaseUrl` | 否 | 覆盖索引基地址 |
@@ -71,6 +73,49 @@ import { Comments0721c } from '0721c/vue';
 显式属性优先于全局配置。组件默认显示 20 条根评论，回复随所属话题一起显示；“显示更多”展开后续话题。
 
 时间显示使用配置的 IANA 时区，记录中的 UTC 时间保持不变。修改显示时区会立即更新界面，不会重新请求评论索引。
+
+### 自定义文案
+
+在应用配置中设置 `messages`，例如为连接失败增加网络说明：
+
+```ts
+create0721c({
+  repository: 'OWNER/blog-comments',
+  messages: {
+    error: '评论加载失败，请注意，评论系统需要确保当前网络环境能够连接 GitHub',
+    stale: '刷新失败，请确保当前网络环境能够连接 GitHub',
+    post: '前往 GitHub 发表评论',
+  },
+});
+```
+
+只填写需要修改的键，其余使用 `locale` 对应的内置文案。子树配置和组件 `messages` 按键覆盖上层配置；`undefined` 表示继承，空字符串表示显示空文本。组件的 `title` 属性优先于 `messages.title`。
+
+文案均为纯文本字符串。`{count}` 用于数量，`{login}` 用于用户名；示例：`total: '共 {count} 条留言'`。修改响应式文案会立即更新界面，不会重新加载评论。`messages` 只影响网站评论区，GitHub 投稿模板仍由 `locale` 决定。
+
+| 键 | 默认中文文案 |
+| --- | --- |
+| `title` | 评论 |
+| `refresh` | 刷新 |
+| `retry` | 重试 |
+| `post` | 发表评论 |
+| `reply` | 回复 |
+| `loading` | 正在加载评论… |
+| `refreshing` | 正在刷新… |
+| `empty` | 暂无评论 |
+| `disabled` | 本文未开放评论 |
+| `error` | 评论加载失败，请重试 |
+| `stale` | 刷新失败，请重试 |
+| `more` | 显示更多（{count} 个话题） |
+| `total` | {count} 条评论 |
+| `parent` | 回复 @{login} |
+| `avatar` | {login} 的头像 |
+| `comment` | {login} 的评论 |
+| `image` | 图片 |
+| `invalidTimeZone` | 评论时区配置无效，请检查 timeZone |
+| `invalidDocument` | 本文的评论配置无效，请检查文档标识或评论设置 |
+
+`invalidDocument` 用于 Content 文档适配器的配置提示。头像、评论标签和数量文案也用于无障碍朗读。
 
 ### 手动刷新
 

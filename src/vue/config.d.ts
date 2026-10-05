@@ -1,7 +1,9 @@
 import type { ComputedRef, Plugin } from 'vue';
 import type { ClientOptions } from '../core/index.js';
+import type { Messages0721c } from './messages.js';
 
 export interface Options0721c {
+  messages?: Messages0721c;
   /** Blank means unconfigured; no comments UI or network requests are created. */
   repository?: ClientOptions['repository'];
   siteUrl?: string;
@@ -19,6 +21,7 @@ export type Config0721cSource = Options0721c | (() => Options0721c);
 
 /** Merged defaults: blank repository, zh-CN, 60000ms cache, enabled true. */
 export interface Config0721c {
+  messages: Readonly<Messages0721c>;
   repository: ClientOptions['repository'];
   siteUrl: string | undefined;
   locale: NonNullable<ClientOptions['locale']>;

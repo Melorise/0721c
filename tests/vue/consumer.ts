@@ -72,3 +72,14 @@ create0721c({ timeZone: 8 });
 // @ts-expect-error Display time zone must be a string.
 h(Comments0721c, { articleId: 'article/essay/slug', timeZone: 8 });
 void displayTimeZone;
+
+import type { Messages0721c } from '../../src/vue/index.js';
+const messages: Messages0721c = { error: '请检查 GitHub 连接', total: '{count} 条留言', parent: '回复 {login}' };
+create0721c({ messages });
+h(Comments0721c, { articleId: 'article/example', messages: { empty: '' } });
+const inheritedMessages: Readonly<Messages0721c> = unified.value.messages;
+// @ts-expect-error Message overrides are serializable strings.
+create0721c({ messages: { total: (count: number) => `${count}条` } });
+// @ts-expect-error Message keys must exist in the UI contract.
+create0721c({ messages: { unknownMessage: 'Text' } });
+void inheritedMessages;

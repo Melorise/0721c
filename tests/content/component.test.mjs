@@ -83,3 +83,19 @@ test('document comments inherit the configured display time zone', async t => {
   const expected = new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Shanghai' }).format(new Date(record.created_at));
   assert.equal(container.querySelector('time').textContent, expected);
 });
+
+
+test('document comments inherit messages including invalid document warnings', async t => {
+  const view = mount(t, undefined, {messages:{empty:'欢迎留言', post:'前往 GitHub 留言'}});
+  await until(() => view.container.querySelector('.c0721c-empty'));
+  assert.equal(view.container.querySelector('.c0721c-empty').textContent, '欢迎留言');
+  assert.equal(view.container.querySelector('.c0721c-post').textContent, '前往 GitHub 留言');
+  const bad = mount(t, {path:'/article/new', commentId:'../invalid'}, {messages:{invalidDocument:'请检查文章评论设置'}});
+  await until(() => bad.container.querySelector('[role=alert]'));
+  assert.equal(bad.container.querySelector('[role=alert]').textContent, '请检查文章评论设置');
+  assert.equal(bad.fixture.calls.length, 0);
+  view.config.messages.empty = '当前网络可以连接 GitHub';
+  await nextTick();
+  assert.equal(view.container.querySelector('.c0721c-empty').textContent, '当前网络可以连接 GitHub');
+  assert.equal(view.fixture.calls.length, 1);
+});

@@ -319,3 +319,127 @@ test('provider timeZone is inherited, reactive and can be overridden by a compon
   assert.equal(view.container.querySelector('time').textContent, expected('Asia/Shanghai'));
   assert.equal(fixture.calls.length, 1);
 });
+
+
+test('messages override load/refresh errors and retry without changing the submission template', async t => {
+  const fixture = transport(snapshot({ comments: [comment(1)] }));
+  fixture.fail(new Error('offline'));
+  const source = reactive({ repository: 'configured/comments', fetchImpl: fixture.fetchImpl,
+    messages: { error: '评论加载失败，请确保网络能够连接 GitHub', stale: '刷新失败，请检查 GitHub 连接', retry: '重新连接' } });
+  const view = mount(t, source);
+  await until(() => view.container.querySelector('.c0721c-error'));
+  assert.equal(view.container.querySelector('.c0721c-error p').textContent, source.messages.error);
+  assert.equal(view.container.querySelector('[role=status]').textContent, source.messages.error);
+  assert.equal(view.container.querySelector('.c0721c-retry').textContent, '重新连接');
+  source.messages.error = '请注意，评论系统需要确保当前网络环境能够连接 GitHub';
+  await nextTick();
+  assert.equal(view.container.querySelector('.c0721c-error p').textContent, source.messages.error);
+  assert.equal(fixture.calls.length, 1);
+  fixture.fail(null);
+  view.container.querySelector('.c0721c-retry').click();
+  await until(() => view.container.querySelector('.c0721c-comment'));
+  const issueBody = new URL(view.container.querySelector('.c0721c-post').href).searchParams.get('body');
+  assert.doesNotMatch(issueBody, /重新连接|网络环境/);
+  fixture.fail(new Error('offline again'));
+  await view.component.refresh();
+  assert.equal(view.container.querySelector('.c0721c-error p').textContent, source.messages.stale);
+  assert.equal(view.container.querySelectorAll('.c0721c-comment').length, 1);
+});
+
+test('messages cover loading, refreshing, empty, disabled and time zone states', async t => {
+  const gate = deferred();
+  const loading = mount(t, { repository: 'configured/comments', messages: { loading: '等候评论' }, fetchImpl: () => gate.promise });
+  assert.equal(loading.container.querySelector('.c0721c-loading').textContent, '等候评论');
+  gate.resolve(jsonResponse(snapshot().index));
+  await until(() => loading.container.querySelector('.c0721c-empty'));
+  assert.equal(loading.container.querySelector('.c0721c-empty').textContent, '暂无评论');
+  loading.props.messages = { empty: '' };
+  await nextTick();
+  assert.equal(loading.container.querySelector('.c0721c-empty').textContent, '');
+  const disabled = mount(t, { repository: 'configured/comments', messages: { disabled: '评论已关闭' }, fetchImpl: transport(snapshot({ enabled: false })).fetchImpl });
+  await until(() => disabled.container.querySelector('.c0721c-disabled'));
+  assert.equal(disabled.container.querySelector('.c0721c-disabled').textContent, '评论已关闭');
+  const badZone = mount(t, { repository: 'configured/comments', timeZone: 'invalid/zone', messages: { invalidTimeZone: '请修正时区' }, fetchImpl: transport().fetchImpl });
+  assert.equal(badZone.container.querySelector('[role=alert]').textContent, '请修正时区');
+  const refreshGate = deferred();
+  let pending = false;
+  const fixture = transport(snapshot({ comments: [comment(1)] }));
+  const refreshView = mount(t, { repository: 'configured/comments', messages: { refreshing: '正在同步最新评论' }, fetchImpl: (url, options) => pending && new URL(url).hostname === 'api.github.com' ? refreshGate.promise : fixture.fetchImpl(url, options) });
+  await until(() => refreshView.container.querySelector('.c0721c-comment'));
+  pending = true;
+  const refresh = refreshView.component.refresh();
+  await until(() => refreshView.container.querySelector('.c0721c-refreshing'));
+  assert.equal(refreshView.container.querySelector('.c0721c-refreshing').textContent, '正在同步最新评论');
+  // The forced ref request needs a commit response before the index request.
+  refreshGate.resolve(jsonResponse({ref: 'refs/heads/index', object: {type: 'commit', sha: 'a'.repeat(40)}}));
+  await refresh;
+  assert.equal(refreshView.container.querySelector('.c0721c-error'), null);
+});
+
+test('partial component messages inherit global keys and title props keep precedence', async t => {
+  const root = comment(1);
+  root.children = [comment(2, { reply_to: root.id })];
+  const fixture = transport(snapshot({ comments: [root, ...Array.from({length:20}, (_, i) => comment(i + 3))] }));
+  const source = reactive({ repository: 'configured/comments', fetchImpl: fixture.fetchImpl,
+    messages: { title: '讨论', refresh: '同步', post: '去 GitHub 评论', total: '共 {count} 条留言', more: '再看 {count} 个话题', parent: '回应 {login}', avatar: '头像 {login}', comment: '留言 {login}' } });
+  const view = mount(t, source, { messages: { reply: '回应' } });
+  await until(() => view.container.querySelector('.c0721c-more'));
+  assert.equal(view.container.querySelector('h2').textContent, '讨论22');
+  assert.equal(view.container.querySelector('.c0721c-refresh').title, '同步');
+  assert.equal(view.container.querySelector('.c0721c-post').textContent, '去 GitHub 评论');
+  assert.equal(view.container.querySelector('.c0721c-reply').textContent, '回应');
+  assert.equal(view.container.querySelector('.c0721c-count').getAttribute('aria-label'), '共 22 条留言');
+  assert.equal(view.container.querySelector('.c0721c-more').textContent, '再看 1 个话题');
+  assert.equal(view.container.querySelector('.c0721c-parent').textContent, '回应 user-1');
+  assert.equal(view.container.querySelector('.c0721c-avatar').getAttribute('aria-label'), '头像 user-1');
+  assert.equal(view.container.querySelector('.c0721c-comment').getAttribute('aria-label'), '留言 user-1');
+  view.props.title = '单页标题';
+  await nextTick();
+  assert.equal(view.container.querySelector('h2').textContent, '单页标题22');
+  view.props.messages = { reply: undefined, post: '<img src=x onerror=alert(1)>' };
+  await nextTick();
+  assert.equal(view.container.querySelector('.c0721c-reply').textContent, '回复');
+  assert.equal(view.container.querySelector('.c0721c-post').textContent, '<img src=x onerror=alert(1)>');
+  assert.equal(view.container.querySelector('.c0721c-post img'), null);
+  assert.equal(fixture.calls.length, 1);
+});
+
+test('subtree message overrides merge per key and remain isolated across apps', async t => {
+  const fixture = transport();
+  const parent = reactive({ repository: 'configured/comments', fetchImpl: fixture.fetchImpl, messages: { title: '全局评论', post: '全局投稿', empty: '全局空状态' } });
+  const child = reactive({ messages: { empty: '子页面空状态' } });
+  const container = document.createElement('div'); document.body.append(container);
+  const Child = { setup() { provide0721cConfig(child); return () => h(Comments0721c, { articleId: 'article/essay/slug' }); } };
+  const app = createApp({ render: () => h(Child) }); app.use(create0721c(parent)); app.mount(container);
+  t.after(() => { app.unmount(); container.remove(); });
+  await until(() => container.querySelector('.c0721c-empty'));
+  assert.equal(container.querySelector('h2').textContent, '全局评论0');
+  assert.equal(container.querySelector('.c0721c-empty').textContent, '子页面空状态');
+  parent.messages.post = '修改全局投稿';
+  await nextTick();
+  assert.equal(container.querySelector('.c0721c-post').textContent, '修改全局投稿');
+  child.messages.empty = undefined;
+  await nextTick();
+  assert.equal(container.querySelector('.c0721c-empty').textContent, '全局空状态');
+  const second = mount(t, { repository: 'other/comments', fetchImpl: transport().fetchImpl });
+  await until(() => second.container.querySelector('.c0721c-empty'));
+  assert.equal(second.container.querySelector('.c0721c-empty').textContent, '暂无评论');
+});
+
+test('SSR messages are escaped and hydrate with unchanged overrides', async t => {
+  const fixture = transport();
+  const options = { repository: 'configured/comments', fetchImpl: fixture.fetchImpl, messages: { title: '留言', loading: '<b>连接 GitHub</b>', empty: '还没有留言' } };
+  const render = () => h(Comments0721c, { articleId: 'article/essay/slug' });
+  const server = createSSRApp({ render }); server.use(create0721c(options));
+  const html = await renderToString(server);
+  assert.match(html, /&lt;b&gt;连接 GitHub&lt;\/b&gt;/);
+  assert.doesNotMatch(html, /<b>/);
+  assert.equal(fixture.calls.length, 0);
+  const container = document.createElement('div'); container.innerHTML = html; document.body.append(container);
+  const warnings = [];
+  const client = createSSRApp({ render }); client.use(create0721c(options)); client.config.warnHandler = msg => warnings.push(msg); client.mount(container);
+  t.after(() => { client.unmount(); container.remove(); });
+  await until(() => container.querySelector('.c0721c-empty'));
+  assert.equal(container.querySelector('.c0721c-empty').textContent, '还没有留言');
+  assert.deepEqual(warnings, []);
+});

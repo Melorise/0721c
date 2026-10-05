@@ -53,6 +53,7 @@ export default defineNuxtConfig({
 | `enabled` | `true` | 控制整个网站的评论区显示 |
 | `siteUrl` | 项目 `site.url`，否则空 | 文章公开链接的基地址；未设置时浏览器使用当前 origin |
 | `locale` | `zh-CN` | 界面和投稿模板语言，可选 `zh-CN`、`en` |
+| `messages` | 当前语言的内置文案 | 按键覆盖评论区文本 |
 | `timeZone` | 访客浏览器时区 | 评论时间显示时区，例如 `Asia/Shanghai`、`UTC` |
 | `cacheTtlMs` | `60000` | 评论读取缓存时间，单位毫秒 |
 | `indexBaseUrl` | 仓库 `index` 分支的 raw 地址 | 自托管索引或镜像的基地址 |
@@ -61,6 +62,28 @@ export default defineNuxtConfig({
 
 例如 `pathPrefixes: ['/article']` 会匹配 `/article` 和 `/article/...`，而不会匹配 `/articles/...`。
 “关于”等普通页面也使用 Markdown 时，用路径筛选将它们排除。
+
+## 自定义提示文案
+
+在网站配置中统一覆盖需要修改的文本：
+
+```ts
+export default defineNuxtConfig({
+  modules: ['0721c/nuxt'],
+  comments0721c: {
+    repository: 'OWNER/blog-comments',
+    messages: {
+      error: '评论加载失败，请注意，评论系统需要确保当前网络环境能够连接 GitHub',
+      stale: '刷新失败，请确保当前网络环境能够连接 GitHub',
+      post: '前往 GitHub 发表评论',
+    },
+  },
+});
+```
+
+配置一次即可应用到所有评论区。未填写的键使用当前 `locale` 的内置文案；`runtimeConfig.public.comments0721c.messages` 按键覆盖模块配置。所有值均为纯文本字符串，数量和用户名分别使用 `{count}`、`{login}` 占位符。
+
+完整键列表见[自定义文案](INTERFACE_CONTRACT.md#自定义文案)。
 
 ## 时间显示
 

@@ -31,7 +31,7 @@ test('upgrade previews exact installed working-file changes without writing file
   const { directory, options } = await deployed(t); const before = await inventory(directory);
   for (const flags of [{}, { dryRun: true }]) {
     const plan = await upgrade({ ...options, ...flags });
-    assert.equal(plan.status, 'planned'); assert.equal(plan.applied, false); assert.equal(plan.version, '0.2.5');
+    assert.equal(plan.status, 'planned'); assert.equal(plan.applied, false); assert.equal(plan.version, '0.2.6');
     assert.equal(plan.dryRun, true); assert.equal('deploymentId' in plan, false); assert.equal('from' in plan, false);
     assert.ok(plan.changes.some(change => change.path === 'README.md' && change.diff.includes('+Updated installed README')));
     assert.ok(plan.changes.some(change => change.path.endsWith('new-helper.mjs') && change.kind === 'add'));

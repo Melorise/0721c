@@ -16,3 +16,8 @@ const zonedOptions: ModuleOptions = { repository: 'owner/comments', timeZone: 'A
 // @ts-expect-error Module timeZone must be a string.
 const invalidTimeZone: ModuleOptions = { timeZone: 8 };
 void [zonedOptions, invalidTimeZone];
+
+const customMessages: ModuleOptions = { messages: { error: '请检查 GitHub 连接', total: '{count} 条留言' } };
+// @ts-expect-error Runtime messages must be serializable strings.
+const invalidMessages: ModuleOptions = { messages: { empty: false } };
+void [customMessages, invalidMessages];

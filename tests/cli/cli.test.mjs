@@ -25,7 +25,7 @@ test('CLI help/version and exports contain no remote management or deployment id
   assert.equal(await cli.runCLI(['--help'], dependencies), 0);
   assert.equal(await cli.runCLI(['--version'], dependencies), 0);
   assert.equal(await cli.runCLI(['doctor', '--repository', 'owner/comments', '--json'], { ...dependencies, githubClient: (await healthy()).client }), 0);
-  assert.equal(output[1], '0.2.5'); assert.match(output[0], /公开仓库/); assert.equal(errors.length, 0);
+  assert.equal(output[1], '0.2.6'); assert.match(output[0], /公开仓库/); assert.equal(errors.length, 0);
   assert.equal(JSON.parse(output[2]).ok, true);
 });
 
@@ -34,7 +34,7 @@ test('arguments select offline init, installed-file upgrade and anonymous diagno
   assert.deepEqual(cli.parseArgs(['init', '--', '--literal-path']).options, { directory: '--literal-path' });
   assert.deepEqual(cli.parseArgs(['upgrade', '--directory=local', '--apply']).options, { directory: 'local', apply: true });
   assert.deepEqual(cli.parseArgs(['doctor', '--repository', 'owner/comments']).options, { repository: 'owner/comments' });
-  for (const args of [['configure'], ['init', '--create'], ['init', '--repository', 'owner/comments'], ['init', '--version', '0.2.5'], ['doctor', '--token', 'test'], ['upgrade', '--to', '0.1.3'], ['upgrade', '--repository', 'owner/comments'], ['upgrade', '--apply', '--dry-run'], ['init', 'a', '--directory', 'b'], ['init', '--dry-run=true'], ['init', '--locale', 'unknown']]) assert.throws(() => cli.parseArgs(args));
+  for (const args of [['configure'], ['init', '--create'], ['init', '--repository', 'owner/comments'], ['init', '--version', '0.2.6'], ['doctor', '--token', 'test'], ['upgrade', '--to', '0.1.3'], ['upgrade', '--repository', 'owner/comments'], ['upgrade', '--apply', '--dry-run'], ['init', 'a', '--directory', 'b'], ['init', '--dry-run=true'], ['init', '--locale', 'unknown']]) assert.throws(() => cli.parseArgs(args));
 });
 
 test('doctor accepts README-only data branches and ignores private permission fields', async () => {

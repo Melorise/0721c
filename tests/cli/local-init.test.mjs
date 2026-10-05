@@ -18,7 +18,7 @@ async function initialized(t, more = {}) {
 test('real offline init creates exact installed files, independent roots, clean main and README-only data', async t => {
   const { directory, output } = await initialized(t);
   const assets = await loadAssets();
-  assert.equal(output.version, '0.2.5'); assert.equal(output.initialized, true);
+  assert.equal(output.version, '0.2.6'); assert.equal(output.initialized, true);
   assert.equal(git(directory, 'status', '--porcelain'), '');
   assert.equal(git(directory, 'symbolic-ref', '--short', 'HEAD').trim(), 'main');
   assert.equal(git(directory, 'remote'), '');

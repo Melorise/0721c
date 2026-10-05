@@ -87,3 +87,12 @@ test('module setup does not register a website verification hook', () => {
   nuxt.hook = () => { assert.fail('Module must not generate a verification file'); };
   setup0721cNuxt({ repository: 'example/comments', siteUrl: 'http://localhost:3000' }, nuxt, kit);
 });
+
+
+test('module and runtime messages merge per key into serializable public config', () => {
+  const { nuxt } = setup({messages:{error:'检查 GitHub 网络', empty:'还没有留言'}}, {comments0721c:{messages:{error:'运行时错误提示', post:'去 GitHub 评论'}}});
+  const messages = nuxt.options.runtimeConfig.public.comments0721c.messages;
+  assert.deepEqual(messages, {post:'去 GitHub 评论', empty:'还没有留言', error:'运行时错误提示'});
+  assert.deepEqual(JSON.parse(JSON.stringify(messages)), messages);
+  assert.deepEqual(setup().nuxt.options.runtimeConfig.public.comments0721c.messages, {});
+});

@@ -26,7 +26,7 @@ npx 0721c init ./blog-comments
 4. 按需设置[邮件通知](docs/EMAIL_NOTIFICATIONS.md)，在文章收到评论或评论收到回复时发送提醒。
 
 本地工具要求 Node.js 22 或更新版本、Git。Vue 组件要求 Vue 3.5，Nuxt 模块支持 Nuxt 3.17 至 4.x。
-当前版本为 0.2.5，安装方式见初始化说明。
+当前版本为 0.2.6，安装方式见初始化说明。
 
 ## Nuxt Content 接入示例
 
@@ -52,6 +52,19 @@ export default defineNuxtConfig({
 ```
 
 组件从文档取得文章路径和标题。详细配置、Front Matter 和样式示例见 [Nuxt Content 接入](docs/NUXT_CONTENT.md)。
+
+## 自定义评论区文案
+
+在 `comments0721c` 中设置 `messages`，统一覆盖网站提示：
+
+```ts
+messages: {
+  error: '评论加载失败，请注意，评论系统需要确保当前网络环境能够连接 GitHub',
+  stale: '刷新失败，请确保当前网络环境能够连接 GitHub',
+}
+```
+
+未填写的键继续使用内置文案。完整配置见[自定义文案](docs/NUXT_CONTENT.md#自定义提示文案)。
 
 ## 评论仓库
 

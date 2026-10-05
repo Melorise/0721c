@@ -5,28 +5,9 @@ import {
 import { RotateCw } from 'lucide';
 import { assertArticleId, createClient } from '../core/index.mjs';
 import { use0721cConfig } from './config.mjs';
+import { mergeMessages, resolveMessages, formatMessage } from './messages.mjs';
 
 const ROOT_PAGE_SIZE = 20;
-const messages = {
-  'zh-CN': {
-    title: '评论', refresh: '刷新', retry: '重试', post: '发表评论', reply: '回复',
-    loading: '正在加载评论…', refreshing: '正在刷新…',
-    empty: '暂无评论。', disabled: '本文未开放评论。',
-    error: '评论加载失败，请重试。', stale: '刷新失败，请重试。',
-    more: (count) => `显示更多（${count} 个话题）`, total: (count) => `${count} 条评论`,
-    parent: (login) => `回复 @${login}`, avatar: (login) => `${login} 的头像`,
-    comment: (login) => `${login} 的评论`, image: '图片', invalidTimeZone: '评论时区配置无效，请检查 timeZone。',
-  },
-  en: {
-    title: 'Comments', refresh: 'Refresh', retry: 'Retry', post: 'Post a comment', reply: 'Reply',
-    loading: 'Loading comments…', refreshing: 'Refreshing…',
-    empty: 'No comments yet.', disabled: 'Comments are closed for this article.',
-    error: 'Unable to load comments. Please retry.', stale: 'Refresh failed. Please retry.',
-    more: (count) => `Show ${count} more threads`, total: (count) => `${count} comments`,
-    parent: (login) => `Reply to @${login}`, avatar: (login) => `Avatar for ${login}`,
-    comment: (login) => `Comment by ${login}`, image: 'Image', invalidTimeZone: 'Invalid comment time zone. Check timeZone.',
-  },
-};
 
 const externalLink = (url, label, className, extra = {}) => h('a', {
   href: url, target: '_blank', rel: 'noopener noreferrer nofollow ugc',
@@ -106,6 +87,7 @@ export const Comments0721c = defineComponent({
     fetchImpl: { type: Function, default: undefined },
     enabled: { type: Boolean, default: undefined },
     title: { type: String, default: undefined },
+    messages: { type: Object, default: undefined },
   },
   setup(props, { slots, expose }) {
     const provider = use0721cConfig();
@@ -114,6 +96,7 @@ export const Comments0721c = defineComponent({
       for (const key of Object.keys(merged)) {
         if (props[key] !== undefined) merged[key] = props[key];
       }
+      merged.messages = mergeMessages(provider.value.messages, props.messages);
       return merged;
     });
     const active = computed(() => config.value.enabled !== false
@@ -126,7 +109,7 @@ export const Comments0721c = defineComponent({
     const context = shallowRef(null);
     const visibleRoots = ref(ROOT_PAGE_SIZE);
     const commentElements = new Map();
-    const text = computed(() => messages[config.value.locale] ?? messages['zh-CN']);
+    const text = computed(() => resolveMessages(config.value.locale, config.value.messages));
     const title = computed(() => props.title ?? text.value.title);
     let mounted = false;
     let revision = 0;
@@ -248,7 +231,7 @@ export const Comments0721c = defineComponent({
       if (error.value) return result.value ? text.value.stale : text.value.error;
       if (state.value === 'empty') return text.value.empty;
       if (state.value === 'disabled') return text.value.disabled;
-      return result.value ? text.value.total(result.value.totalCount) : text.value.loading;
+      return result.value ? formatMessage(text.value.total, { count: result.value.totalCount }) : text.value.loading;
     });
     const slotContext = () => ({
       title: title.value, articleId: props.articleId, status: state.value, busy: busy.value,
@@ -269,10 +252,10 @@ export const Comments0721c = defineComponent({
         style: { '--0721c-depth': Math.min(depth, 1), '--0721c-mobile-depth': Math.min(depth, 1) },
       }, [h('article', {
         id: commentId(comment.id), class: 'c0721c-comment', tabindex: -1,
-        'aria-label': text.value.comment(comment.author.login),
+        'aria-label': formatMessage(text.value.comment, { login: comment.author.login }),
         ref: (element) => { if (element) commentElements.set(comment.id, element); else commentElements.delete(comment.id); },
       }, [
-        h(Avatar, { author: comment.author, label: text.value.avatar(comment.author.login) }),
+        h(Avatar, { author: comment.author, label: formatMessage(text.value.avatar, { login: comment.author.login }) }),
         h('div', { class: 'c0721c-main' }, [
           h('header', { class: 'c0721c-comment-header' }, [
             h('div', { class: 'c0721c-comment-meta' }, [
@@ -288,7 +271,7 @@ export const Comments0721c = defineComponent({
           parent ? h('a', {
             class: 'c0721c-parent', href: `#${commentId(parent.id)}`,
             onClick: () => { commentElements.get(parent.id)?.focus({ preventScroll: true }); },
-          }, text.value.parent(parent.author.login)) : null,
+          }, formatMessage(text.value.parent, { login: parent.author.login })) : null,
           h(MarkdownBody, { source: comment.body_markdown, imageLabel: text.value.image }),
         ]),
       ])]);
@@ -309,7 +292,7 @@ export const Comments0721c = defineComponent({
     }, [
       h('header', { class: 'c0721c-header' }, [
         h('h2', { id: `${identity}-title`, class: 'c0721c-title' }, [title.value,
-          result.value ? h('span', { class: 'c0721c-count', 'aria-label': text.value.total(result.value.totalCount) }, String(result.value.totalCount)) : null]),
+          result.value ? h('span', { class: 'c0721c-count', 'aria-label': formatMessage(text.value.total, { count: result.value.totalCount }) }, String(result.value.totalCount)) : null]),
         h('div', { class: 'c0721c-actions' }, [
           h('button', {
             type: 'button', class: 'c0721c-refresh', disabled: busy.value,
@@ -332,7 +315,7 @@ export const Comments0721c = defineComponent({
       state.value === 'disabled' ? h('div', { class: 'c0721c-notice c0721c-disabled' }, text.value.disabled) : null,
       entries.value.length ? h('ol', { class: 'c0721c-list', 'aria-label': text.value.title }, entries.value.map(renderComment)) : null,
       result.value && visibleRoots.value < result.value.rootCount
-        ? action(text.value.more(Math.min(ROOT_PAGE_SIZE, result.value.rootCount - visibleRoots.value)), showMore, 'c0721c-more') : null,
+        ? action(formatMessage(text.value.more, { count: Math.min(ROOT_PAGE_SIZE, result.value.rootCount - visibleRoots.value) }), showMore, 'c0721c-more') : null,
       result.value && slots.footer
         ? h('footer', { class: 'c0721c-footer' }, slots.footer(slotContext())) : null,
     ]);

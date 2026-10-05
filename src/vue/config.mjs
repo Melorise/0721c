@@ -1,10 +1,11 @@
 import { computed, hasInjectionContext, inject, provide } from 'vue';
+import { mergeMessages } from './messages.mjs';
 
 // The key is shared; configuration and computed refs are created per installation.
 const configurationKey = Symbol('0721c configuration');
 const defaults = Object.freeze({
   repository: '', locale: 'zh-CN', timeZone: undefined, indexBaseUrl: undefined, siteUrl: undefined,
-  cacheTtlMs: 60000, fetchImpl: undefined, enabled: true,
+  cacheTtlMs: 60000, fetchImpl: undefined, enabled: true, messages: Object.freeze({}),
 });
 
 function resolveConfig(source, inherited) {
@@ -14,6 +15,7 @@ function resolveConfig(source, inherited) {
     for (const key of Object.keys(defaults)) {
       if (configured[key] !== undefined) merged[key] = configured[key];
     }
+    merged.messages = Object.freeze(mergeMessages(inherited?.value.messages, configured.messages));
     return Object.freeze(merged);
   });
 }

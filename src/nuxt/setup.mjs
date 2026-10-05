@@ -1,5 +1,7 @@
+import { mergeMessages } from '../vue/messages.mjs';
+
 export const DEFAULT_NUXT_OPTIONS = Object.freeze({
-  enabled: true, repository: '', siteUrl: '', locale: 'zh-CN', timeZone: '', indexBaseUrl: '', cacheTtlMs: 60000,
+  enabled: true, repository: '', siteUrl: '', locale: 'zh-CN', timeZone: '', indexBaseUrl: '', cacheTtlMs: 60000, messages: Object.freeze({}),
   content: Object.freeze({ pathPrefixes: Object.freeze([]), markdownOnly: true }),
 });
 
@@ -12,6 +14,7 @@ export function setup0721cNuxt(options, nuxt, kit) {
   const selected = {};
   for (const field of ['enabled', 'repository', 'locale', 'timeZone', 'indexBaseUrl', 'cacheTtlMs']) selected[field] = previous[field] ?? options[field] ?? DEFAULT_NUXT_OPTIONS[field];
   selected.siteUrl = previous.siteUrl ?? (options.siteUrl || nuxt.options.site?.url || '');
+  selected.messages = mergeMessages(options.messages, previous.messages);
   selected.content = {
     pathPrefixes: previous.content?.pathPrefixes ?? options.content?.pathPrefixes ?? [],
     markdownOnly: previous.content?.markdownOnly ?? options.content?.markdownOnly ?? true,
